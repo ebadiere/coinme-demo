@@ -34,15 +34,6 @@ public class CustomerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     final private static String baseUrl = "http://localhost:" + port + "/api/v1/customer/";
-    private static URI uri;
-
-    static {
-        try {
-            uri = new URI(baseUrl);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
 
     public CustomerTest() throws URISyntaxException {
     }
@@ -63,8 +54,6 @@ public class CustomerTest {
             customerJsonObject.put("name", customerName);
             customers.add(customerJsonObject);
         }
-
-
     }
 
 
@@ -72,6 +61,9 @@ public class CustomerTest {
     public void allRequiredCustomersTest() throws Exception {
 
         loadCustomers();
+
+        URI uri = new URI(baseUrl);
+
         ResponseEntity<Customer[]> response = restTemplate.getForEntity(uri, Customer[].class);
         Assert.assertEquals(200, response.getStatusCodeValue());
 
@@ -99,8 +91,9 @@ public class CustomerTest {
 
         loadCustomers();
         String idUrl = baseUrl+"2";
-        URI idUri = new URI(idUrl);
-        ResponseEntity<Customer> response = restTemplate.getForEntity(idUri, Customer.class);
+        URI uri = new URI(idUrl);
+
+        ResponseEntity<Customer> response = restTemplate.getForEntity(uri, Customer.class);
         Assert.assertEquals(200, response.getStatusCodeValue());
 
         Customer customer = response.getBody();
@@ -108,7 +101,48 @@ public class CustomerTest {
         Assert.assertEquals(customer.getName(), "Branden Gibson");
     }
 
-    private static void loadCustomers() {
+    @Test
+    public void updateCustomerTest() throws Exception {
+
+        loadCustomers();
+        String idUrl = baseUrl+"2";
+        URI uri = new URI(idUrl);
+
+        JSONObject customerJsonObject = new JSONObject();
+        customerJsonObject.put("id", 2);
+        customerJsonObject.put("name", "Branden Smith");
+
+        HttpEntity<String> request = new HttpEntity<String>(customerJsonObject.toString(), headers);
+
+        restTemplate.put(uri, request);
+
+        ResponseEntity<Customer> response = restTemplate.getForEntity(uri, Customer.class);
+        Assert.assertEquals(200, response.getStatusCodeValue());
+
+        Customer customer = response.getBody();
+
+        Assert.assertEquals(customer.getName(), "Branden Smith");
+
+        // Set back
+        customerJsonObject.put("id", 2);
+        customerJsonObject.put("name", "Branden Gibson");
+
+        request = new HttpEntity<String>(customerJsonObject.toString(), headers);
+
+        restTemplate.put(uri, request);
+
+        response = restTemplate.getForEntity(uri, Customer.class);
+        Assert.assertEquals(200, response.getStatusCodeValue());
+
+        customer = response.getBody();
+
+        Assert.assertEquals(customer.getName(), "Branden Gibson");
+
+    }
+
+    private static void loadCustomers() throws URISyntaxException {
+
+        URI uri = new URI(baseUrl);
         ResponseEntity<Customer[]> response = restTemplate.getForEntity(uri, Customer[].class);
         Assert.assertEquals(200, response.getStatusCodeValue());
 
@@ -117,9 +151,9 @@ public class CustomerTest {
         if(customersLoaded.length == 0){
             for(JSONObject customer : customers){
                 HttpEntity<String> request = new HttpEntity<String>(customer.toString(), headers);
-                ResponseEntity customerResultAsJsonStr = restTemplate.postForEntity(uri, request, String.class);
+                ResponseEntity resp = restTemplate.postForEntity(uri, request, String.class);
 
-                Assert.assertEquals(customerResultAsJsonStr.getStatusCodeValue(), 200);
+                Assert.assertEquals(resp.getStatusCodeValue(), 200);
             }
         }
     }
