@@ -1,7 +1,6 @@
 package com.coinme.coinmedemo.api;
 
 import com.coinme.coinmedemo.model.Customer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -31,12 +30,7 @@ public class CustomerTest {
     private static ArrayList<JSONObject> customers = new ArrayList<>();
     private static HttpHeaders headers = new HttpHeaders();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     final private static String baseUrl = "http://localhost:" + port + "/api/v1/customer/";
-
-    public CustomerTest() throws URISyntaxException {
-    }
 
     @BeforeAll
     public static void runBeforeAllTestMethods() throws JSONException {
@@ -69,20 +63,25 @@ public class CustomerTest {
 
         Customer[] customers = response.getBody();
 
-        // In memory Fake DB Customer Data Access Serice will hold 4 when this is run on initial startup
+        // In memory Fake DB Customer Data Access Service will hold 4 on initial startup
         Assert.assertEquals(customers.length, 4);
 
-        Assert.assertEquals(customers[0].getId(), 1);
-        Assert.assertEquals(customers[0].getName(), "Arisha Barron");
-
-        Assert.assertEquals(customers[1].getId(), 2);
-        Assert.assertEquals(customers[1].getName(), "Branden Gibson");
-
-        Assert.assertEquals(customers[2].getId(), 3);
-        Assert.assertEquals(customers[2].getName(), "Rhonda Church");
-
-        Assert.assertEquals(customers[3].getId(), 4);
-        Assert.assertEquals(customers[3].getName(),"Georgina Hazel");
+        for(Customer customer : customers){
+            if (customer.getId() == 2){
+                Assert.assertEquals(customer.getName(), "Branden Gibson");
+            }
+            int id = customer.getId();
+            switch(id){
+                case 1: Assert.assertEquals(customer.getName(), "Arisha Barron");
+                        break;
+                case 2: Assert.assertEquals(customer.getName(), "Branden Gibson");
+                        break;
+                case 3: Assert.assertEquals(customer.getName(), "Rhonda Church");
+                        break;
+                case 4: Assert.assertEquals(customer.getName(),"Georgina Hazel");
+                        break;
+            }
+        }
 
     }
 
@@ -137,6 +136,46 @@ public class CustomerTest {
         customer = response.getBody();
 
         Assert.assertEquals(customer.getName(), "Branden Gibson");
+
+    }
+
+    @Test
+    public void deleteCustomerTest() throws Exception {
+        loadCustomers();
+        String idUrl = baseUrl+"2";
+        URI uri = new URI(idUrl);
+
+        restTemplate.delete(uri);
+
+        uri = new URI(baseUrl);
+
+        ResponseEntity<Customer[]> response = restTemplate.getForEntity(uri, Customer[].class);
+        Assert.assertEquals(200, response.getStatusCodeValue());
+
+        Customer[] customers = response.getBody();
+
+        Assert.assertEquals(customers.length, 3);
+
+        // Set back
+        JSONObject customerJsonObject = new JSONObject();
+        customerJsonObject.put("id", 2);
+        customerJsonObject.put("name", "Branden Gibson");
+
+        HttpEntity<String> request = new HttpEntity<String>(customerJsonObject.toString(), headers);
+        ResponseEntity resp = restTemplate.postForEntity(uri, request, String.class);
+
+        Assert.assertEquals(resp.getStatusCodeValue(), 200);
+
+        response = restTemplate.getForEntity(uri, Customer[].class);
+        Assert.assertEquals(200, response.getStatusCodeValue());
+
+        customers = response.getBody();
+
+        for(Customer customer : customers){
+            if (customer.getId() == 2){
+                Assert.assertEquals(customer.getName(), "Branden Gibson");
+            }
+        }
 
     }
 
