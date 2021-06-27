@@ -53,7 +53,7 @@ public class AccountTest {
     }
 
     @Test
-    public void createAccountWithInitialDepositAmount() throws Exception{
+    public void createANewBankAccountForCustomerWithInitialDeposit() throws Exception{
         loadCustomers();
         String idUrl = customerUrl +"2";
         URI uri = new URI(idUrl);
@@ -76,6 +76,49 @@ public class AccountTest {
         assert account != null;
         Assertions.assertEquals(account.getBalance(), 100.00);
 
+    }
+
+    @Test
+    public void aSingleCustomerMayHaveMultipleBankAccounts() throws Exception{
+
+        loadCustomers();
+        String idUrl = customerUrl +"3";
+        URI uri = new URI(idUrl);
+
+        ResponseEntity<Customer> response = restTemplate.getForEntity(uri, Customer.class);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+
+        JSONObject accountJsonObject = new JSONObject();
+        accountJsonObject.put("customerNumber", 3);
+        accountJsonObject.put("deposit", 100.00);
+
+        uri = new URI(accountUrl);
+
+        HttpEntity<String> request = new HttpEntity<>(accountJsonObject.toString(), headers);
+        ResponseEntity<Account> resp = restTemplate.postForEntity(uri, request, Account.class);
+
+        Assertions.assertEquals(resp.getStatusCodeValue(), 201);
+        Account account = resp.getBody();
+
+        assert account != null;
+        Assertions.assertEquals(account.getBalance(), 100.00);
+
+        // Now create a second account for this customer
+
+        accountJsonObject = new JSONObject();
+        accountJsonObject.put("customerNumber", 3);
+        accountJsonObject.put("deposit", 200.00);
+
+        uri = new URI(accountUrl);
+
+        request = new HttpEntity<>(accountJsonObject.toString(), headers);
+        resp = restTemplate.postForEntity(uri, request, Account.class);
+
+        Assertions.assertEquals(resp.getStatusCodeValue(), 201);
+        account = resp.getBody();
+
+        assert account != null;
+        Assertions.assertEquals(account.getBalance(), 200.00);
 
     }
 
