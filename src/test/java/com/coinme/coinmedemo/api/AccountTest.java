@@ -53,7 +53,7 @@ public class AccountTest {
     }
 
     @Test
-    public void createANewBankAccountForCustomerWithInitialDeposit() throws Exception{
+    public void createANewBankAccountForCustomerWithInitialDepositTest() throws Exception{
         loadCustomers();
         String idUrl = customerUrl +"2";
         URI uri = new URI(idUrl);
@@ -79,7 +79,7 @@ public class AccountTest {
     }
 
     @Test
-    public void aSingleCustomerMayHaveMultipleBankAccounts() throws Exception{
+    public void aSingleCustomerMayHaveMultipleBankAccountsTest() throws Exception{
 
         loadCustomers();
         String idUrl = customerUrl +"3";
@@ -119,6 +119,32 @@ public class AccountTest {
 
         assert account != null;
         Assertions.assertEquals(account.getBalance(), 200.00);
+    }
+
+    @Test
+    public void retrieveBalancesForAGivenAccountTest() throws Exception {
+
+        loadCustomers();
+        String idUrl = customerUrl +"1";
+        URI uri = new URI(idUrl);
+
+        ResponseEntity<Customer> response = restTemplate.getForEntity(uri, Customer.class);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+
+        JSONObject accountJsonObject = new JSONObject();
+        accountJsonObject.put("customerNumber", 3);
+        accountJsonObject.put("deposit", 300.00);
+
+        uri = new URI(accountUrl);
+
+        HttpEntity<String> request = new HttpEntity<>(accountJsonObject.toString(), headers);
+        ResponseEntity<Account> resp = restTemplate.postForEntity(uri, request, Account.class);
+
+        Assertions.assertEquals(resp.getStatusCodeValue(), 201);
+        Account account = resp.getBody();
+
+        assert account != null;
+        Assertions.assertEquals(account.getBalance(), 300.00);
 
     }
 
