@@ -5,6 +5,7 @@ import com.coinme.coinmedemo.model.Customer;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 @SpringBootTest
 public class AccountTest {
@@ -59,7 +59,7 @@ public class AccountTest {
         URI uri = new URI(idUrl);
 
         ResponseEntity<Customer> response = restTemplate.getForEntity(uri, Customer.class);
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        Assertions.assertEquals(200, response.getStatusCodeValue());
 
         JSONObject accountJsonObject = new JSONObject();
         accountJsonObject.put("customerNumber", 2);
@@ -67,15 +67,15 @@ public class AccountTest {
 
         uri = new URI(accountUrl);
 
-        HttpEntity<String> request = new HttpEntity<String>(accountJsonObject.toString(), headers);
+        HttpEntity<String> request = new HttpEntity<>(accountJsonObject.toString(), headers);
         ResponseEntity<Account> resp = restTemplate.postForEntity(uri, request, Account.class);
 
-        Assert.assertEquals(resp.getStatusCodeValue(), 200);
+        Assertions.assertEquals(resp.getStatusCodeValue(), 201);
         Account account = resp.getBody();
-        UUID accountNumber = account.getAccountNumber();
 
-        uri = new URI(accountUrl + "/" + accountNumber);
-//        ResponseEntity<Float> response = restTemplate.getForEntity(uri, Float.class);
+        assert account != null;
+        Assertions.assertEquals(account.getBalance(), 100.00);
+
 
     }
 
@@ -83,16 +83,17 @@ public class AccountTest {
 
         URI uri = new URI(customerUrl);
         ResponseEntity<Customer[]> response = restTemplate.getForEntity(uri, Customer[].class);
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        Assertions.assertEquals(200, response.getStatusCodeValue());
 
         Customer[] customersLoaded = response.getBody();
 
+        assert customersLoaded != null;
         if (customersLoaded.length == 0) {
             for (JSONObject customer : customers) {
-                HttpEntity<String> request = new HttpEntity<String>(customer.toString(), headers);
-                ResponseEntity resp = restTemplate.postForEntity(uri, request, String.class);
+                HttpEntity<String> request = new HttpEntity<>(customer.toString(), headers);
+                ResponseEntity<String> resp = restTemplate.postForEntity(uri, request, String.class);
 
-                Assert.assertEquals(resp.getStatusCodeValue(), 200);
+                Assertions.assertEquals(resp.getStatusCodeValue(), 200);
             }
         }
     }
