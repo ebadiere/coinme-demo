@@ -15,7 +15,7 @@ public class CustomerService {
     private final CustomerDao customerDao;
 
     @Autowired
-    public CustomerService(@Qualifier("fakeDao") CustomerDao customerDao) {
+    public CustomerService(@Qualifier("fakeCustomerDao") CustomerDao customerDao) {
         this.customerDao = customerDao;
     }
 
